@@ -10,13 +10,21 @@ struct Handler;
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content == "atis_avatar" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "https://img.atis.dev/avatar.png").await {
+            if let Err(why) = msg
+                .channel_id
+                .say(&ctx.http, "https://img.atis.dev/avatar.png")
+                .await
+            {
                 println!("Error sending message: {:?}", why);
             }
         }
 
         if msg.content == "atis_lgtm" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "https://img.atis.dev/lgtm.png").await {
+            if let Err(why) = msg
+                .channel_id
+                .say(&ctx.http, "https://img.atis.dev/lgtm.png")
+                .await
+            {
                 println!("Error sending message: {:?}", why);
             }
         }
@@ -30,7 +38,10 @@ async fn main() {
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT;
 
-    let mut client = Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
+    let mut client = Client::builder(&token, intents)
+        .event_handler(Handler)
+        .await
+        .expect("Err creating client");
 
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
