@@ -9,7 +9,7 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "atis_avatar" {
+        if msg.content == "avatar" {
             if let Err(why) = msg
                 .channel_id
                 .say(&ctx.http, "https://img.atis.dev/avatar.png")
@@ -19,10 +19,20 @@ impl EventHandler for Handler {
             }
         }
 
-        if msg.content == "atis_lgtm" {
+        if msg.content == "LGTM" {
             if let Err(why) = msg
                 .channel_id
                 .say(&ctx.http, "https://img.atis.dev/lgtm.png")
+                .await
+            {
+                println!("Error sending message: {:?}", why);
+            }
+        }
+
+        if msg.content == "ぬるぽ" {
+            if let Err(why) = msg
+                .channel_id
+                .say(&ctx.http, "ガッ")
                 .await
             {
                 println!("Error sending message: {:?}", why);
