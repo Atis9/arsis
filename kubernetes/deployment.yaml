@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadeta: arsis
+spec:
+  containers:
+  - name: arsis
+    image: ghcr.io/atis9/arsis:latest
+    imagePullPolicy: Always
+    env:
+      - name: DISCORD_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: arsis-secret
+            key: discord-token
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 50m
+        memory: 50Mi
