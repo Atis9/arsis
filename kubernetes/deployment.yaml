@@ -25,6 +25,8 @@ spec:
                 secretKeyRef:
                   name: arsis-secret
                   key: discord-token
+            - name: RUST_LOG
+              value: info
           resources:
             limits:
               cpu: 100m

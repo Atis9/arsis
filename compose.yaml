@@ -5,3 +5,4 @@ services:
       dockerfile: Dockerfile
     environment:
       DISCORD_TOKEN:
+      RUST_LOG: info
