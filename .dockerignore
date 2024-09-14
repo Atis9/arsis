@@ -1,0 +1,7 @@
+.git
+.github
+kubernetes
+.env
+.env.sample
+compose.yaml
+README.md
