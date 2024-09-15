@@ -6,5 +6,5 @@ services:
       target: development
     environment:
       DISCORD_TOKEN:
-      RUST_LOG: info
+      RUST_LOG: arsis=info
     command: arsis
