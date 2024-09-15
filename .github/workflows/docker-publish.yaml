@@ -10,13 +10,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
     permissions:
       contents: read
       packages: write
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3.6.0
@@ -56,3 +58,42 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Set up ID token
+        uses: actions/github-script@v7
+        id: id-token
+        with:
+          result-encoding: string
+          script: |
+            return await core.getIDToken('k8s.chitoku.jp');
+      - name: Set context
+        run: |
+          kubectl config set-cluster k8s.chitoku.jp --server=https://k8s.chitoku.jp
+          kubectl config set-credentials github-actions --token=${{ steps.id-token.outputs.result }}
+          kubectl config set-context k8s.chitoku.jp --cluster=k8s.chitoku.jp --user=github-actions
+          kubectl config use-context k8s.chitoku.jp
+      - name: Select image tag
+        id: image-tag
+        run: |
+          echo "Available tags: ${{ needs.build.outputs.image-tags }}"
+          TAG=$(echo "${{ needs.build.outputs.image-tags }}" | tr ',' '\n' | grep -E ':v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$TAG" ]; then
+            echo "No valid tag found!"
+            exit 1
+          fi
+          echo "Selected tag: $TAG"
+          echo "image-tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Replace image tag
+        run: sed -i s#ghcr.io/atis9/arsis:latest#${{ steps.image-tag.outputs.image-tag }}#g kubernetes/deployment.yaml
+      - run: kubectl apply -f kubernetes/deployment.yaml
