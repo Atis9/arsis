@@ -7,3 +7,4 @@ services:
     environment:
       DISCORD_TOKEN:
       RUST_LOG: info
+    command: arsis
