@@ -18,6 +18,7 @@ RUN --mount=type=cache,id=api:/usr/local/cargo/registry,target=/usr/local/cargo/
 FROM scratch AS production
 LABEL io.github.atis9.arsis.app=arsis
 LABEL org.opencontainers.image.source=https://github.com/Atis9/arsis
+ENV PATH=/
 COPY --link --from=release /lib/x86_64-linux-gnu/ld-linux-x86-64.* /lib/x86_64-linux-gnu/
 COPY --link --from=release /lib/x86_64-linux-gnu/libc.so* /lib/x86_64-linux-gnu/
 COPY --link --from=release /lib/x86_64-linux-gnu/libcrypto.so* /lib/x86_64-linux-gnu/
