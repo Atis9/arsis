@@ -1,73 +1,65 @@
-use std::env;
-use serenity::async_trait;
-use serenity::model::channel::Message;
-use serenity::prelude::*;
-use log::{info, error}; // log macros
+use log::{error, info};
+use poise::serenity_prelude as serenity;
 
-struct Handler;
+struct Data {} // User data, which is stored and accessible in all command invocations
+type Error = Box<dyn std::error::Error + Send + Sync>;
+type Context<'a> = poise::Context<'a, Data, Error>;
 
-#[async_trait]
-impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        info!("Received message: {:?}", msg.content);
+#[poise::command(slash_command, prefix_command)]
+async fn ping(ctx: Context<'_>) -> Result<(), Error> {
+    let response = "pong";
+    ctx.say(response).await?;
+    Ok(())
+}
 
-        if msg.content == "avatar" {
-            info!("Processing 'avatar' command");
-            if let Err(why) = msg
-                .channel_id
-                .say(&ctx.http, "https://img.atis.dev/avatar.png")
-                .await
-            {
-                error!("Error sending message: {:?}", why);
-            }
-        }
+#[poise::command(slash_command, prefix_command)]
+async fn lgtm(ctx: Context<'_>) -> Result<(), Error> {
+    let response = "https://img.atis.dev/lgtm";
+    ctx.say(response).await?;
+    Ok(())
+}
 
-        if msg.content == "LGTM" {
-            info!("Processing 'LGTM' command");
-            if let Err(why) = msg
-                .channel_id
-                .say(&ctx.http, "https://img.atis.dev/lgtm.png")
-                .await
-            {
-                error!("Error sending message: {:?}", why);
-            }
-        }
-
-        if msg.content == "ぬるぽ" {
-            info!("Processing 'ぬるぽ' command");
-            if let Err(why) = msg
-                .channel_id
-                .say(&ctx.http, "ガッ")
-                .await
-            {
-                error!("Error sending message: {:?}", why);
-            }
-        }
-    }
+#[poise::command(slash_command, prefix_command)]
+async fn lgtm_to(
+    ctx: Context<'_>,
+    #[description = "Selected user"] user: Option<serenity::User>,
+) -> Result<(), Error> {
+    let u = user.as_ref().unwrap_or_else(|| ctx.author());
+    let response = format!("<@{}> https://img.atis.dev/lgtm", u.id);
+    ctx.say(response).await?;
+    Ok(())
 }
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
-
     info!("Starting the bot...");
 
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
     info!("Token retrieved successfully");
 
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+    // let intents = serenity::GatewayIntents::non_privileged();
+    let intents = serenity::GatewayIntents::GUILD_MESSAGES
+        | serenity::GatewayIntents::DIRECT_MESSAGES
+        | serenity::GatewayIntents::MESSAGE_CONTENT;
+
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: vec![ping(), lgtm(), lgtm_to()],
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {})
+            })
+        })
+        .build();
 
     info!("Creating client...");
-    let mut client = Client::builder(&token, intents)
-        .event_handler(Handler)
-        .await
-        .expect("Err creating client");
-
+    let client = serenity::ClientBuilder::new(token, intents)
+        .framework(framework)
+        .await;
     info!("Client created successfully");
-
-    if let Err(why) = client.start().await {
-        error!("Client error: {:?}", why);
-    }
+    client.unwrap().start().await.unwrap();
 }
