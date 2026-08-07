@@ -74,6 +74,15 @@ jobs:
         uses: chitoku-k/actions/setup-kubectl-context@master
         with:
           namespace: nyantech
+      - name: Update Discord token
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: |
+          kubectl create secret generic arsis-secret \
+            --from-literal=discord-token="$DISCORD_TOKEN" \
+            --dry-run=client \
+            --output=yaml \
+            | kubectl apply --filename=-
       - name: Select image tag
         id: image-tag
         run: |
