@@ -15,10 +15,20 @@ spec:
       labels:
         app: arsis
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: arsis
           image: ghcr.io/atis9/arsis:latest
           imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
           env:
             - name: DISCORD_TOKEN
               valueFrom:

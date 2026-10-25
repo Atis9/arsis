@@ -25,6 +25,8 @@ COPY --link --from=release /lib/x86_64-linux-gnu/libcrypto.so* /lib/x86_64-linux
 COPY --link --from=release /lib/x86_64-linux-gnu/libgcc_s.so* /lib/x86_64-linux-gnu/
 COPY --link --from=release /lib/x86_64-linux-gnu/libm.so* /lib/x86_64-linux-gnu/
 COPY --link --from=release /lib/x86_64-linux-gnu/libssl.so* /lib/x86_64-linux-gnu/
+COPY --link --from=release /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
+COPY --link --from=release /lib/x86_64-linux-gnu/libzstd.so* /lib/x86_64-linux-gnu/
 COPY --link --from=release /lib64 /lib64
 COPY --link --from=release /usr/local/bin/arsis /arsis
 COPY --link --from=release /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -33,4 +35,5 @@ RUN --mount=from=release,src=/bin,dst=/bin \
   --mount=from=release,src=/lib,dst=/lib \
   --mount=from=release,src=/usr,dst=/usr \
   /bin/mkdir --mode=1777 /tmp
+USER 65532:65532
 ENTRYPOINT ["arsis"]
